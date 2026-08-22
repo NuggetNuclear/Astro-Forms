@@ -1,0 +1,32 @@
+---
+import { CAMPO_BASE, ETIQUETA_FLOTANTE, ETIQUETA_REPOSO_TEXTAREA, AYUDA } from "./estilos";
+
+interface Props {
+  nombre: string;
+  etiqueta: string;
+  ayuda?: string;
+  requerido?: boolean;
+  filas?: number;
+}
+
+const { nombre, etiqueta, ayuda, requerido = false, filas = 3 } = Astro.props;
+const idAyuda = ayuda ? `${nombre}-ayuda` : undefined;
+---
+
+<div class="group relative">
+  <div class="relative">
+    <textarea
+      id={nombre}
+      name={nombre}
+      rows={filas}
+      placeholder=" "
+      required={requerido}
+      aria-describedby={idAyuda}
+      class:list={[CAMPO_BASE, "resize-y px-5 pb-3 pt-8 leading-relaxed"]}></textarea>
+    <label for={nombre} class:list={[ETIQUETA_FLOTANTE, ETIQUETA_REPOSO_TEXTAREA]}>
+      {etiqueta}
+      {requerido && <span class="ml-0.5 text-neon-magenta" aria-hidden="true">*</span>}
+    </label>
+  </div>
+  {ayuda && <p id={idAyuda} class={AYUDA}>{ayuda}</p>}
+</div>

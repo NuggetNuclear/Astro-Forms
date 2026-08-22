@@ -1,0 +1,28 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Nav from "../components/Nav.astro";
+import Hero from "../components/Hero.astro";
+import Ticker from "../components/Ticker.astro";
+import Servicios from "../components/Servicios.astro";
+import Equipamiento from "../components/Equipamiento.astro";
+import Proceso from "../components/Proceso.astro";
+import Reserva from "../components/Reserva.astro";
+import Footer from "../components/Footer.astro";
+import CtaFlotante from "../components/CtaFlotante.astro";
+---
+
+<BaseLayout>
+  <Nav />
+
+  <main id="contenido">
+    <Hero />
+    <Ticker />
+    <Servicios />
+    <Equipamiento />
+    <Proceso />
+    <Reserva />
+  </main>
+
+  <Footer />
+  <CtaFlotante />
+</BaseLayout>

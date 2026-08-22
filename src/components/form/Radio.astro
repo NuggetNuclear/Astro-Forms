@@ -1,0 +1,58 @@
+---
+import type { Acento } from "../../data/formulario";
+import { ACENTO_ACTIVO, ACENTO_MARCA, FOCO_LABEL } from "./estilos";
+
+interface Props {
+  nombre: string;
+  etiqueta: string;
+  opciones: string[];
+  ayuda?: string;
+  requerido?: boolean;
+  acento?: Acento;
+}
+
+const { nombre, etiqueta, opciones, ayuda, requerido = false, acento = "cyan" } = Astro.props;
+---
+
+<fieldset>
+  <legend class="text-[13px] font-medium leading-snug text-white/85">
+    {etiqueta}
+    {requerido && <span class="ml-0.5 text-neon-magenta" aria-hidden="true">*</span>}
+  </legend>
+  {ayuda && <p class="mt-1.5 text-xs text-white/40">{ayuda}</p>}
+
+  <div class="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+    {opciones.map((opcion, i) => (
+      <label
+        class:list={[
+          "flex h-full cursor-pointer select-none items-center gap-3 rounded-2xl border border-white/12",
+          "bg-white/[0.03] px-4 py-3 text-sm leading-snug text-white/70",
+          "transition-all duration-200 ease-out",
+          "hover:border-white/30 hover:bg-white/[0.07] hover:text-white",
+          ACENTO_ACTIVO[acento],
+          FOCO_LABEL,
+        ]}
+      >
+        <input
+          type="radio"
+          id={`${nombre}-${i}`}
+          name={nombre}
+          value={opcion}
+          required={requerido}
+          class="peer sr-only"
+        />
+        <span
+          class:list={[
+            "grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full border-2 border-white/25",
+            "transition-all duration-200",
+            ACENTO_MARCA[acento],
+          ]}
+          aria-hidden="true"
+        >
+          <span class="h-1.5 w-1.5 scale-0 rounded-full bg-ink-950 opacity-0 transition-all duration-200"></span>
+        </span>
+        <span>{opcion}</span>
+      </label>
+    ))}
+  </div>
+</fieldset>

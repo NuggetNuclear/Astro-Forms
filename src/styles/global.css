@@ -1,0 +1,227 @@
+@import "tailwindcss";
+
+/* ============================================================
+   DEEJAY LOOKUMAN ENERGYMAN — Design System
+   Paleta extraída del flyer oficial: cian neón, magenta vibrante
+   y amarillo brillante sobre una base slate/negro profundo.
+   ============================================================ */
+
+@theme {
+  /* --- Base oscura --- */
+  --color-ink-950: #04050b;
+  --color-ink-900: #080a14;
+  --color-ink-850: #0c0f1c;
+  --color-ink-800: #121728;
+  --color-ink-700: #1c2338;
+  --color-ink-600: #2a3350;
+
+  /* --- Acentos neón --- */
+  --color-neon-cyan: #22e6ff;
+  --color-neon-cyan-soft: #7ef0ff;
+  --color-neon-cyan-deep: #0891b2;
+
+  --color-neon-magenta: #ff2ec4;
+  --color-neon-magenta-soft: #ff86dd;
+  --color-neon-magenta-deep: #b81a8c;
+
+  --color-neon-yellow: #ffd60a;
+  --color-neon-yellow-soft: #ffe66b;
+
+  --color-neon-lime: #b8ff3d;
+
+  /* --- Tipografía --- */
+  /* Las pilas completas las genera Astro (con métricas de respaldo);
+     aquí sólo se les da nombre para las utilidades de Tailwind. */
+  --font-display: var(--fuente-display, "Anton", "Arial Narrow", sans-serif);
+  --font-sans: var(--fuente-sans, ui-sans-serif, system-ui, sans-serif);
+
+  /* --- Animaciones --- */
+  --animate-float-slow: float-slow 9s ease-in-out infinite;
+  --animate-float-slower: float-slow 13s ease-in-out infinite;
+  --animate-pulse-glow: pulse-glow 3.5s ease-in-out infinite;
+  --animate-marquee: marquee 38s linear infinite;
+  --animate-beam-sweep: beam-sweep 7s ease-in-out infinite;
+  --animate-shimmer: shimmer 2.4s linear infinite;
+  --animate-rise: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(0, -22px, 0) scale(1.04); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes beam-sweep {
+  0%, 100% { transform: rotate(-13deg) translateY(0); opacity: 0.35; }
+  50% { transform: rotate(11deg) translateY(-14px); opacity: 0.8; }
+}
+
+@keyframes shimmer {
+  from { background-position: 200% center; }
+  to { background-position: -200% center; }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translate3d(0, 28px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    scroll-behavior: smooth;
+    /* Compensa el nav sticky al saltar con anclas */
+    scroll-padding-top: 6rem;
+  }
+
+  html,
+  body {
+    background-color: var(--color-ink-950);
+    color: #fff;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
+  }
+
+  ::selection {
+    background: var(--color-neon-magenta);
+    color: #fff;
+  }
+
+  /* Anillo de foco global, accesible y coherente con la marca */
+  :focus-visible {
+    outline: 2px solid var(--color-neon-cyan);
+    outline-offset: 3px;
+    border-radius: 0.5rem;
+  }
+
+  /* Scrollbar en clave nocturna */
+  ::-webkit-scrollbar { width: 11px; height: 11px; }
+  ::-webkit-scrollbar-track { background: var(--color-ink-900); }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(var(--color-neon-cyan-deep), var(--color-neon-magenta-deep));
+    border-radius: 999px;
+    border: 3px solid var(--color-ink-900);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(var(--color-neon-cyan), var(--color-neon-magenta));
+  }
+
+  /* El navegador pinta el autofill de blanco: lo forzamos a la paleta */
+  input:-webkit-autofill,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    -webkit-text-fill-color: #fff;
+    -webkit-box-shadow: 0 0 0 1000px var(--color-ink-850) inset;
+    caret-color: #fff;
+    transition: background-color 9999s ease-in-out 0s;
+  }
+
+  /* El calendario/reloj nativo es negro sobre negro sin esto */
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) sepia(1) saturate(5) hue-rotate(150deg);
+    cursor: pointer;
+    opacity: 0.75;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator:hover,
+  input[type="time"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+  }
+}
+
+/* ============================================================
+   Utilidades propias
+   ============================================================ */
+
+/* Texto con degradado neón */
+@utility text-gradient-neon {
+  background-image: linear-gradient(
+    100deg,
+    var(--color-neon-cyan) 0%,
+    var(--color-neon-cyan-soft) 22%,
+    var(--color-neon-magenta) 58%,
+    var(--color-neon-yellow) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+@utility text-gradient-cyan {
+  background-image: linear-gradient(100deg, var(--color-neon-cyan) 0%, var(--color-neon-cyan-soft) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* Halo de luz difusa: los "blobs" del fondo */
+@utility light-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Borde degradado real (no se puede con border-color simple) */
+@utility border-gradient {
+  position: relative;
+  background-clip: padding-box;
+}
+
+/* Grano sutil para que los degradados no se vean "plásticos" */
+@utility bg-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+}
+
+/* Reveal on scroll — activado por IntersectionObserver */
+@layer components {
+  [data-reveal] {
+    opacity: 0;
+    transform: translate3d(0, 28px, 0);
+    transition:
+      opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  [data-reveal].is-visible {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* ============================================================
+   Accesibilidad: respetar "reducir movimiento"
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  :root { scroll-behavior: auto; }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

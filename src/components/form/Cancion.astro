@@ -1,0 +1,50 @@
+---
+import type { Acento } from "../../data/formulario";
+import { CAMPO_BASE, ETIQUETA_FLOTANTE, ETIQUETA_REPOSO } from "./estilos";
+import { ACENTO_PUNTO } from "./estilos";
+
+interface Props {
+  nombre: string;
+  etiqueta: string;
+  acento?: Acento;
+}
+
+const { nombre, etiqueta, acento = "magenta" } = Astro.props;
+---
+
+<div
+  class="@container h-full rounded-2xl border border-white/8 bg-white/[0.02] p-4 transition-colors duration-300 focus-within:border-white/20 focus-within:bg-white/[0.04] sm:p-5"
+>
+  <p class="mb-4 flex items-center gap-2.5 text-sm font-semibold text-white">
+    <span class:list={["h-1.5 w-1.5 shrink-0 rounded-full", ACENTO_PUNTO[acento]]} aria-hidden="true"></span>
+    {etiqueta}
+  </p>
+
+  <div class="grid gap-3 @sm:grid-cols-[1.4fr_1fr]">
+    <div class="relative">
+      <input
+        type="text"
+        id={`${nombre}_cancion`}
+        name={`${nombre}_cancion`}
+        placeholder=" "
+        class:list={[CAMPO_BASE, "px-5 pb-2.5 pt-7"]}
+      />
+      <label for={`${nombre}_cancion`} class:list={[ETIQUETA_FLOTANTE, ETIQUETA_REPOSO]}>
+        Canción
+      </label>
+    </div>
+
+    <div class="relative">
+      <input
+        type="text"
+        id={`${nombre}_artista`}
+        name={`${nombre}_artista`}
+        placeholder=" "
+        class:list={[CAMPO_BASE, "px-5 pb-2.5 pt-7"]}
+      />
+      <label for={`${nombre}_artista`} class:list={[ETIQUETA_FLOTANTE, ETIQUETA_REPOSO]}>
+        Artista
+      </label>
+    </div>
+  </div>
+</div>

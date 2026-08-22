@@ -1,0 +1,47 @@
+---
+import type { Acento } from "../../data/formulario";
+import { ACENTO_MARCA, FOCO_LABEL } from "./estilos";
+
+interface Props {
+  nombre: string;
+  texto: string;
+  requerido?: boolean;
+  acento?: Acento;
+}
+
+const { nombre, texto, requerido = false, acento = "cyan" } = Astro.props;
+---
+
+<label
+  class:list={[
+    "flex cursor-pointer select-none items-start gap-4 rounded-2xl border border-white/12",
+    "bg-white/[0.03] p-5 text-sm leading-relaxed text-white/70",
+    "transition-all duration-200 ease-out",
+    "hover:border-white/30 hover:bg-white/[0.06] hover:text-white",
+    "has-[:checked]:border-neon-cyan/60 has-[:checked]:bg-neon-cyan/[0.07] has-[:checked]:text-white",
+    "has-[:user-invalid]:border-rose-500/60 has-[:user-invalid]:bg-rose-500/[0.06]",
+    FOCO_LABEL,
+  ]}
+>
+  <input type="checkbox" id={nombre} name={nombre} required={requerido} class="peer sr-only" />
+  <span
+    class:list={[
+      "mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md border-2 border-white/25",
+      "text-ink-950 transition-all duration-200",
+      ACENTO_MARCA[acento],
+    ]}
+    aria-hidden="true"
+  >
+    <svg
+      class="h-3 w-3 scale-0 opacity-0 transition-all duration-200"
+      viewBox="0 0 12 12" fill="none" stroke="currentColor"
+      stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"
+    >
+      <path d="m2 6.4 2.6 2.6L10 3.4" />
+    </svg>
+  </span>
+  <span>
+    {texto}
+    {requerido && <span class="ml-0.5 text-neon-magenta" aria-hidden="true">*</span>}
+  </span>
+</label>

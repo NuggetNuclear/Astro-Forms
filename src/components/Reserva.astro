@@ -1,0 +1,300 @@
+---
+import { PASOS } from "../data/formulario";
+import { CONTACTO } from "../data/sitio";
+import Bloque from "./form/Bloque.astro";
+import { ACENTO_TEXTO } from "./form/estilos";
+
+/**
+ * Endpoint opcional para recibir las respuestas (Formspree, Web3Forms,
+ * Getform, una función serverless propia…). Si no está definido, el
+ * formulario cae automáticamente al envío por WhatsApp.
+ */
+const endpoint = import.meta.env.PUBLIC_FORM_ENDPOINT ?? "";
+const total = PASOS.length;
+---
+
+<!-- Ojo: nada de `overflow-hidden` en esta sección — convertiría al
+     contenedor en scroll container y rompería el `sticky` de la barra de
+     progreso. El recorte de los halos vive en la capa de ambiente. -->
+<section id="reserva" class="relative scroll-mt-24 py-24 sm:py-32">
+  <!-- Ambiente -->
+  <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+    <div class="light-blob left-[-10%] top-24 h-[30rem] w-[30rem] bg-neon-magenta/12 animate-float-slower"></div>
+    <div class="light-blob bottom-0 right-[-8%] h-[28rem] w-[28rem] bg-neon-cyan/12 animate-float-slow"></div>
+    <div
+      class="absolute inset-0 opacity-[0.35]"
+      style="background-image:radial-gradient(circle at 50% 0%,rgba(34,230,255,0.10),transparent 60%)"
+    >
+    </div>
+  </div>
+
+  <div class="mx-auto max-w-5xl px-5 sm:px-8">
+    <!-- ── Encabezado ─────────────────────────────────────────── -->
+    <header class="mx-auto max-w-3xl text-center" data-reveal>
+      <span
+        class="inline-flex items-center gap-2 rounded-full border border-neon-cyan/30 bg-neon-cyan/[0.07] px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-neon-cyan"
+      >
+        <span class="h-1.5 w-1.5 animate-pulse-glow rounded-full bg-neon-cyan"></span>
+        Reserva tu fecha
+      </span>
+
+      <h2 class="mt-6 font-display text-4xl uppercase leading-[0.95] sm:text-6xl">
+        Cuestionario <span class="text-gradient-neon">musical</span>
+      </h2>
+
+      <p class="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/55 sm:text-lg">
+        Este formulario está diseñado para conocer sus gustos, canciones especiales, límites y
+        expectativas. Sus respuestas me permiten preparar una experiencia musical personalizada y
+        respetuosa con su estilo.
+      </p>
+
+      <p
+        class="mx-auto mt-6 flex max-w-2xl items-start gap-3 rounded-2xl border border-neon-yellow/25 bg-neon-yellow/[0.06] p-4 text-left text-sm leading-relaxed text-neon-yellow-soft"
+      >
+        <span class="text-lg leading-none" aria-hidden="true">★</span>
+        <span>
+          <strong class="font-bold text-neon-yellow">Importante:</strong> si existe una canción, artista
+          o estilo que <em>no</em> desean escuchar, indíquenlo claramente. Sus preferencias son la
+          prioridad musical del evento.
+        </span>
+      </p>
+    </header>
+
+    <!-- ── Tarjeta del formulario ─────────────────────────────── -->
+    <div
+      class="relative mt-14 rounded-[2rem] border border-white/10 bg-ink-900/60 p-1 shadow-[0_40px_120px_-40px_rgba(0,0,0,0.9)] backdrop-blur-xl"
+      data-reveal
+    >
+      <!-- Filo neón superior -->
+      <div
+        class="pointer-events-none absolute inset-x-10 -top-px h-px bg-gradient-to-r from-transparent via-neon-cyan/70 to-transparent"
+        aria-hidden="true"
+      >
+      </div>
+
+      <div class="rounded-[1.85rem] bg-ink-950/40 p-5 sm:p-8 lg:p-10">
+        <!-- Progreso -->
+        <div
+          class="sticky top-[4.5rem] z-20 -mx-5 mb-8 rounded-2xl border border-white/8 bg-ink-950/95 px-5 py-4 backdrop-blur-xl sm:-mx-3 sm:px-4"
+          data-progreso
+        >
+          <div class="flex items-center justify-between gap-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.16em] text-white/45">
+              Paso <span class="text-white" data-paso-actual>1</span> de {total}
+            </p>
+            <p class="truncate text-xs font-semibold text-neon-cyan" data-paso-titulo>
+              {PASOS[0]?.titulo}
+            </p>
+          </div>
+
+          <!-- Barra -->
+          <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-white/8">
+            <div
+              class="h-full rounded-full bg-gradient-to-r from-neon-cyan via-neon-magenta to-neon-yellow shadow-[0_0_16px_0_var(--color-neon-cyan)] transition-[width] duration-500 ease-out"
+              style="width:0%"
+              data-barra
+              role="progressbar"
+              aria-valuemin="0"
+              aria-valuemax={total}
+              aria-valuenow="1"
+              aria-label="Progreso del formulario"
+            >
+            </div>
+          </div>
+
+          <!-- Navegación por pasos (escritorio) -->
+          <nav class="mt-4 hidden flex-wrap gap-1.5 lg:flex" aria-label="Pasos del formulario">
+            {
+              PASOS.map((paso, i) => (
+                <button
+                  type="button"
+                  data-ir-a-paso={i}
+                  class="group flex items-center gap-2 rounded-full border border-white/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-white/40 transition-all duration-200 hover:border-white/30 hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan aria-[current=step]:border-neon-cyan/60 aria-[current=step]:bg-neon-cyan/10 aria-[current=step]:text-neon-cyan data-[completo]:border-emerald-400/40 data-[completo]:text-emerald-300/80"
+                >
+                  <span class="tabular-nums opacity-60">{String(i + 1).padStart(2, "0")}</span>
+                  {paso.corto}
+                </button>
+              ))
+            }
+          </nav>
+        </div>
+
+        <!-- ── Formulario ─────────────────────────────────────── -->
+        <form
+            id="form-reserva"
+            novalidate
+            data-endpoint={endpoint}
+            data-whatsapp={CONTACTO.whatsapp}
+          >
+          <!-- Trampa anti-spam: invisible para personas, irresistible para bots -->
+          <div class="absolute -left-[9999px]" aria-hidden="true">
+            <label>
+              No completar
+              <input type="text" name="sitio_web" tabindex="-1" autocomplete="off" />
+            </label>
+          </div>
+
+          {
+            PASOS.map((paso, i) => (
+              <div
+                class="space-y-5"
+                data-panel={i}
+                id={`paso-${paso.id}`}
+                hidden={i !== 0}
+                role="group"
+                aria-label={`Paso ${i + 1}: ${paso.titulo}`}
+              >
+                <div class="mb-7">
+                  <p
+                    class:list={[
+                      "text-[11px] font-bold uppercase tracking-[0.22em]",
+                      ACENTO_TEXTO[paso.acento],
+                    ]}
+                  >
+                    Paso {String(i + 1).padStart(2, "0")} · {paso.corto}
+                  </p>
+                  <h3 class="mt-2 font-display text-2xl uppercase leading-tight text-white sm:text-3xl">
+                    {paso.titulo}
+                  </h3>
+                  <p class="mt-3 max-w-3xl text-sm leading-relaxed text-white/50">{paso.intro}</p>
+                </div>
+
+                {paso.bloques.some((b) => b.soloMatrimonio) && (
+                  <p
+                    class="hidden items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm leading-relaxed text-white/50 data-[visible]:flex"
+                    data-aviso-matrimonio
+                  >
+                    <span aria-hidden="true">ℹ️</span>
+                    <span>
+                      Las canciones de protocolo de matrimonio están ocultas porque el evento
+                      seleccionado es otro. Si igual quieren definir momentos con música, usen el
+                      campo de abajo.
+                    </span>
+                  </p>
+                )}
+
+                {paso.bloques.map((bloque) => (
+                  <Bloque bloque={bloque} acentoPaso={paso.acento} />
+                ))}
+              </div>
+            ))
+          }
+
+          <!-- ── Barra de acciones ────────────────────────────── -->
+          <div
+            class="mt-9 flex flex-col gap-4 border-t border-white/8 pt-7 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <p class="order-2 text-xs text-white/35 sm:order-1" data-estado-guardado>
+              Tus respuestas se guardan en este navegador mientras completas el formulario.
+            </p>
+
+            <div class="order-1 flex gap-3 sm:order-2">
+              <button
+                type="button"
+                data-anterior
+                class="rounded-full border border-white/15 px-6 py-3 text-sm font-semibold text-white/70 transition-all duration-200 hover:border-white/40 hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan disabled:pointer-events-none disabled:opacity-30"
+                disabled
+              >
+                Atrás
+              </button>
+
+              <button
+                type="button"
+                data-siguiente
+                class="group relative flex-1 overflow-hidden rounded-full bg-gradient-to-r from-neon-cyan to-neon-cyan-soft px-8 py-3 text-sm font-bold uppercase tracking-wider text-ink-950 shadow-[0_0_32px_-6px_var(--color-neon-cyan)] transition-all duration-300 hover:shadow-[0_0_46px_-4px_var(--color-neon-cyan)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950 sm:flex-none"
+              >
+                Siguiente
+              </button>
+
+              <button
+                type="submit"
+                data-enviar
+                hidden
+                class="group relative flex-1 overflow-hidden rounded-full bg-gradient-to-r from-neon-magenta to-neon-yellow px-8 py-3 text-sm font-bold uppercase tracking-wider text-ink-950 shadow-[0_0_32px_-6px_var(--color-neon-magenta)] transition-all duration-300 hover:shadow-[0_0_50px_-4px_var(--color-neon-magenta)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-magenta focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950 disabled:opacity-60 sm:flex-none"
+              >
+                Enviar cuestionario
+              </button>
+            </div>
+          </div>
+
+          <p
+            class="mt-4 hidden items-center gap-2 rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200 data-[visible]:flex"
+            data-error-paso
+            role="alert"
+          >
+          </p>
+        </form>
+
+        <!-- ── Pantalla de éxito ──────────────────────────────── -->
+        <div hidden data-exito class="py-10 text-center">
+          <div
+            class="mx-auto grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-neon-cyan to-neon-magenta shadow-[0_0_60px_-10px_var(--color-neon-cyan)]"
+          >
+            <svg
+              class="h-10 w-10 text-ink-950"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m4 12.5 5.5 5.5L20 7" />
+            </svg>
+          </div>
+
+          <h3 class="mt-8 font-display text-3xl uppercase text-white sm:text-4xl">
+            {
+              endpoint ? (
+                <Fragment>
+                  ¡Cuestionario <span class="text-gradient-neon">recibido</span>!
+                </Fragment>
+              ) : (
+                <Fragment>
+                  Cuestionario <span class="text-gradient-neon">completo</span>
+                </Fragment>
+              )
+            }
+          </h3>
+
+          <p class="mx-auto mt-4 max-w-md text-base leading-relaxed text-white/55">
+            {
+              endpoint
+                ? "Gracias por confiarme la música de uno de los días más importantes de sus vidas. Reviso todo y les respondo dentro de las próximas 24 horas."
+                : "Sólo queda un paso: envíenme las respuestas por WhatsApp y les confirmo disponibilidad de inmediato. También pueden descargar una copia para ustedes."
+            }
+          </p>
+
+          <div class="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <a
+              href="#"
+              data-exito-whatsapp
+              target="_blank"
+              rel="noopener"
+              class="inline-flex items-center gap-2.5 rounded-full bg-gradient-to-r from-neon-cyan to-neon-cyan-soft px-7 py-3.5 text-sm font-bold uppercase tracking-wider text-ink-950 shadow-[0_0_32px_-6px_var(--color-neon-cyan)] transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_46px_-4px_var(--color-neon-cyan)]"
+            >
+              {endpoint ? "Avisarme por WhatsApp" : "Enviar por WhatsApp"}
+            </a>
+
+            <button
+              type="button"
+              data-descargar
+              class="inline-flex items-center gap-2.5 rounded-full border border-white/15 px-7 py-3.5 text-sm font-semibold text-white/75 transition-all duration-200 hover:border-white/40 hover:bg-white/5 hover:text-white"
+            >
+              Descargar mis respuestas
+            </button>
+          </div>
+
+          <p class="mt-8 text-xs text-white/30">
+            ¿Necesitan corregir algo? Escríbanme a {CONTACTO.whatsappVisible}.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import "../scripts/reserva";
+</script>

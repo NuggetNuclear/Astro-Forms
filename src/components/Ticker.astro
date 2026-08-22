@@ -1,0 +1,40 @@
+---
+import { TICKER } from "../data/sitio";
+
+/* Se duplica la lista para que el desplazamiento del 50% quede continuo. */
+const items = [...TICKER, ...TICKER];
+---
+
+<div
+  class="relative flex overflow-hidden border-y border-white/8 bg-gradient-to-r from-neon-cyan/10 via-neon-magenta/10 to-neon-yellow/10 py-4"
+  role="presentation"
+  aria-hidden="true"
+>
+  <div class="flex shrink-0 animate-marquee items-center gap-8 pr-8">
+    {
+      items.map((item, i) => (
+        <div class="flex items-center gap-8">
+          <span class="whitespace-nowrap font-display text-lg uppercase tracking-[0.14em] text-white/70 sm:text-2xl">
+            {item}
+          </span>
+          <span
+            class:list={[
+              "h-1.5 w-1.5 shrink-0 rounded-full",
+              i % 3 === 0 ? "bg-neon-cyan" : i % 3 === 1 ? "bg-neon-magenta" : "bg-neon-yellow",
+            ]}
+          />
+        </div>
+      ))
+    }
+  </div>
+
+  <!-- Difuminado en los bordes para que no "corte" el texto -->
+  <div
+    class="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-ink-950 to-transparent"
+  >
+  </div>
+  <div
+    class="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-ink-950 to-transparent"
+  >
+  </div>
+</div>

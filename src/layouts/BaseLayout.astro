@@ -1,0 +1,98 @@
+---
+import { Font } from "astro:assets";
+import "../styles/global.css";
+import { MARCA } from "../data/sitio";
+
+interface Props {
+  titulo?: string;
+  descripcion?: string;
+}
+
+const {
+  titulo = `${MARCA.nombre} — DJ, Animación y Amplificación en Chile`,
+  descripcion = MARCA.descripcion,
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site ?? "https://lookuman.cl");
+---
+
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="canonical" href={canonical} />
+
+    <title>{titulo}</title>
+    <meta name="description" content={descripcion} />
+    <meta name="theme-color" content="#04050b" />
+
+    <!-- Open Graph / redes -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_CL" />
+    <meta property="og:site_name" content={MARCA.nombre} />
+    <meta property="og:title" content={titulo} />
+    <meta property="og:description" content={descripcion} />
+    <meta property="og:image" content={new URL("/flyer-lookuman.jpg", canonical)} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/flyer-lookuman.jpg" />
+
+    <!-- Tipografías autoalojadas: display condensada como el flyer + una sans
+         legible para la interfaz. Sin peticiones a terceros. -->
+    <Font cssVariable="--fuente-display" preload />
+    <Font cssVariable="--fuente-sans" preload />
+
+    <script
+      is:inline
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        name: MARCA.nombre,
+        description: MARCA.descripcion,
+        slogan: MARCA.slogan,
+        telephone: "+56940429740",
+        areaServed: "CL",
+        image: new URL("/flyer-lookuman.jpg", canonical).toString(),
+        url: canonical.toString(),
+        sameAs: ["https://instagram.com/lookuman", "https://facebook.com/lookuman"],
+      })}
+    />
+  </head>
+
+  <body class="min-h-screen bg-ink-950 antialiased">
+    <a
+      href="#reserva"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-5 focus:top-5 focus:z-[100] focus:rounded-full focus:bg-neon-cyan focus:px-5 focus:py-2.5 focus:text-sm focus:font-bold focus:text-ink-950"
+    >
+      Saltar al formulario de reserva
+    </a>
+
+    <slot />
+
+    <script>
+      /* Reveal on scroll: una sola pasada, sin librerías. */
+      const objetivos = document.querySelectorAll("[data-reveal]");
+
+      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches && objetivos.length) {
+        const observador = new IntersectionObserver(
+          (entradas) => {
+            for (const entrada of entradas) {
+              if (!entrada.isIntersecting) continue;
+              entrada.target.classList.add("is-visible");
+              observador.unobserve(entrada.target);
+            }
+          },
+          { rootMargin: "0px 0px -12% 0px", threshold: 0.05 },
+        );
+
+        objetivos.forEach((objetivo) => observador.observe(objetivo));
+      } else {
+        objetivos.forEach((objetivo) => objetivo.classList.add("is-visible"));
+      }
+    </script>
+  </body>
+</html>

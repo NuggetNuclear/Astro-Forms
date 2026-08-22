@@ -1,0 +1,88 @@
+---
+import type { Acento, Campo } from "../../data/formulario";
+import Input from "./Input.astro";
+import Textarea from "./Textarea.astro";
+import Select from "./Select.astro";
+import Chips from "./Chips.astro";
+import Radio from "./Radio.astro";
+import Checkbox from "./Checkbox.astro";
+import Cancion from "./Cancion.astro";
+
+interface Props {
+  campo: Campo;
+  acento?: Acento;
+}
+
+const { campo, acento = "cyan" } = Astro.props;
+
+/** Mapea los tipos del esquema a los `type` nativos del <input>. */
+const TIPO_HTML = {
+  texto: "text",
+  email: "email",
+  tel: "tel",
+  fecha: "date",
+  hora: "time",
+  numero: "number",
+} as const;
+
+const esMitad = campo.ancho === "mitad";
+---
+
+<div class:list={[esMitad ? "sm:col-span-1" : "sm:col-span-2"]} data-campo={campo.nombre}>
+  {
+    campo.tipo === "textarea" ? (
+      <Textarea
+        nombre={campo.nombre}
+        etiqueta={campo.etiqueta}
+        ayuda={campo.ayuda}
+        requerido={campo.requerido}
+        filas={campo.filas}
+      />
+    ) : campo.tipo === "select" ? (
+      <Select
+        nombre={campo.nombre}
+        etiqueta={campo.etiqueta}
+        opciones={campo.opciones}
+        ayuda={campo.ayuda}
+        requerido={campo.requerido}
+      />
+    ) : campo.tipo === "chips" ? (
+      <Chips
+        nombre={campo.nombre}
+        etiqueta={campo.etiqueta}
+        opciones={campo.opciones}
+        ayuda={campo.ayuda}
+        acento={acento}
+      />
+    ) : campo.tipo === "radio" ? (
+      <Radio
+        nombre={campo.nombre}
+        etiqueta={campo.etiqueta}
+        opciones={campo.opciones}
+        ayuda={campo.ayuda}
+        requerido={campo.requerido}
+        acento={acento}
+      />
+    ) : campo.tipo === "checkbox" ? (
+      <Checkbox
+        nombre={campo.nombre}
+        texto={campo.texto}
+        requerido={campo.requerido}
+        acento={acento}
+      />
+    ) : campo.tipo === "cancion" ? (
+      <Cancion nombre={campo.nombre} etiqueta={campo.etiqueta} acento={acento} />
+    ) : (
+      <Input
+        nombre={campo.nombre}
+        etiqueta={campo.etiqueta}
+        tipo={TIPO_HTML[campo.tipo]}
+        ayuda={campo.ayuda}
+        requerido={campo.requerido}
+        autocomplete={campo.autocomplete}
+        inputmode={campo.inputmode}
+        min={campo.min}
+      />
+    )
+  }
+</div>

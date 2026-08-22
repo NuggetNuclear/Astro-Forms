@@ -1,0 +1,50 @@
+---
+import { CAMPO_BASE, ETIQUETA_FLOTANTE, AYUDA } from "./estilos";
+
+interface Props {
+  nombre: string;
+  etiqueta: string;
+  opciones: string[];
+  ayuda?: string;
+  requerido?: boolean;
+}
+
+const { nombre, etiqueta, opciones, ayuda, requerido = false } = Astro.props;
+const idAyuda = ayuda ? `${nombre}-ayuda` : undefined;
+---
+
+<div class="group relative">
+  <div class="relative">
+    <select
+      id={nombre}
+      name={nombre}
+      required={requerido}
+      aria-describedby={idAyuda}
+      class:list={[
+        CAMPO_BASE,
+        "cursor-pointer appearance-none px-5 pb-2.5 pt-7 pr-12",
+        /* Sin valor elegido el texto queda tenue, como un placeholder */
+        "[&:invalid]:text-white/45",
+      ]}
+    >
+      <option value="" class="bg-ink-900 text-white/50">Selecciona una opción…</option>
+      {opciones.map((op) => (
+        <option value={op} class="bg-ink-900 text-white">{op}</option>
+      ))}
+    </select>
+
+    <label for={nombre} class={ETIQUETA_FLOTANTE}>
+      {etiqueta}
+      {requerido && <span class="ml-0.5 text-neon-magenta" aria-hidden="true">*</span>}
+    </label>
+
+    <svg
+      class="pointer-events-none absolute right-5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40 transition-colors duration-300 peer-focus:text-neon-cyan"
+      viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+    >
+      <path d="m5 7.5 5 5 5-5" />
+    </svg>
+  </div>
+  {ayuda && <p id={idAyuda} class={AYUDA}>{ayuda}</p>}
+</div>

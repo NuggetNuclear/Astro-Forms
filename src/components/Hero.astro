@@ -1,0 +1,168 @@
+---
+import { EVENTOS, MARCA, MENSAJE_WHATSAPP_DEFECTO, linkWhatsApp } from "../data/sitio";
+---
+
+<section id="inicio" class="relative isolate overflow-hidden pb-20 pt-32 sm:pb-28 sm:pt-40">
+  <!-- ── Escenografía de fondo ───────────────────────────────── -->
+  <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
+    <!-- Halos de color -->
+    <div class="light-blob left-[-14%] top-[-6%] h-[36rem] w-[36rem] bg-neon-magenta/25 animate-float-slow"></div>
+    <div class="light-blob right-[-12%] top-[6%] h-[34rem] w-[34rem] bg-neon-cyan/25 animate-float-slower"></div>
+    <div class="light-blob bottom-[-18%] left-1/3 h-[30rem] w-[30rem] bg-neon-yellow/10 animate-float-slow"></div>
+
+    <!-- Haces de luz robótica, como en el flyer -->
+    <div
+      class="absolute left-[12%] top-0 h-[65vh] w-40 origin-top bg-gradient-to-b from-neon-magenta/35 via-neon-magenta/8 to-transparent blur-2xl animate-beam-sweep [clip-path:polygon(46%_0,54%_0,100%_100%,0_100%)]"
+    >
+    </div>
+    <div
+      class="absolute right-[12%] top-0 h-[65vh] w-40 origin-top bg-gradient-to-b from-neon-cyan/35 via-neon-cyan/8 to-transparent blur-2xl animate-beam-sweep [animation-delay:1.4s] [clip-path:polygon(46%_0,54%_0,100%_100%,0_100%)]"
+    >
+    </div>
+
+    <!-- Rejilla de pista de baile -->
+    <div
+      class="absolute inset-0 opacity-[0.14] [mask-image:radial-gradient(ellipse_65%_55%_at_50%_40%,#000,transparent)]"
+      style="background-image:linear-gradient(rgba(255,255,255,.28) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.28) 1px,transparent 1px);background-size:64px 64px"
+    >
+    </div>
+
+    <div class="bg-grain absolute inset-0 opacity-[0.05] mix-blend-overlay"></div>
+  </div>
+
+  <div class="mx-auto max-w-7xl px-5 sm:px-8">
+    <div class="grid items-center gap-14 lg:grid-cols-[1.15fr_0.85fr] lg:gap-12">
+      <!-- ── Columna de texto ───────────────────────────────── -->
+      <div class="max-w-2xl">
+        <div
+          class="inline-flex items-center gap-2.5 rounded-full border border-white/12 bg-white/[0.04] px-4 py-1.5 backdrop-blur-sm"
+          data-reveal
+        >
+          <span class="relative flex h-2 w-2" aria-hidden="true">
+            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-neon-lime opacity-75"></span>
+            <span class="relative inline-flex h-2 w-2 rounded-full bg-neon-lime"></span>
+          </span>
+          <span class="text-[11px] font-bold uppercase tracking-[0.2em] text-white/70">
+            Agenda abierta · Todo Chile
+          </span>
+        </div>
+
+        <h1 class="mt-7" data-reveal style="--reveal-delay:80ms">
+          <span class="block font-display text-[clamp(2.1rem,7.2vw,4.1rem)] uppercase leading-[0.92] tracking-tight text-white">
+            Servicios profesionales
+          </span>
+          <span class="mt-1 block font-display text-[clamp(1.7rem,5.6vw,3.2rem)] uppercase leading-[0.95] tracking-tight">
+            <span class="whitespace-nowrap text-neon-yellow">de deejay</span>{" "}
+            <span class="whitespace-nowrap">
+              <span class="text-white/35">+</span>{" "}
+              <span class="text-neon-cyan">animación</span>
+            </span>{" "}
+            <span class="whitespace-nowrap">
+              <span class="text-white/35">+</span>{" "}
+              <span class="text-neon-magenta">amplificación</span>
+            </span>
+          </span>
+        </h1>
+
+        <p
+          class="mt-6 font-display text-[clamp(1.6rem,5vw,2.6rem)] uppercase leading-none tracking-tight"
+          data-reveal
+          style="--reveal-delay:160ms"
+        >
+          <span class="text-white">Deejay</span>{" "}
+          <span class="text-gradient-neon">Lookuman EnergyMan</span>
+        </p>
+
+        <p
+          class="mt-6 max-w-xl text-base leading-relaxed text-white/55 sm:text-lg"
+          data-reveal
+          style="--reveal-delay:220ms"
+        >
+          Matrimonios, cumpleaños, bautizos, graduaciones y disco peque con sonido JBL, luces
+          robóticas y animación en vivo. Cada fiesta se planifica contigo, canción por canción.
+        </p>
+
+        <!-- CTAs -->
+        <div class="mt-9 flex flex-col gap-3 sm:flex-row" data-reveal style="--reveal-delay:280ms">
+          <a
+            href="#reserva"
+            class="group inline-flex items-center justify-center gap-2.5 rounded-full bg-gradient-to-r from-neon-magenta via-neon-magenta to-neon-yellow px-8 py-4 text-sm font-bold uppercase tracking-wider text-ink-950 shadow-[0_0_40px_-8px_var(--color-neon-magenta)] transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_0_60px_-6px_var(--color-neon-magenta)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-magenta focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950"
+          >
+            Reservar mi fecha
+            <span class="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true">→</span>
+          </a>
+
+          <a
+            href={linkWhatsApp(MENSAJE_WHATSAPP_DEFECTO)}
+            target="_blank"
+            rel="noopener"
+            class="inline-flex items-center justify-center gap-2.5 rounded-full border border-white/15 bg-white/[0.03] px-8 py-4 text-sm font-bold uppercase tracking-wider text-white backdrop-blur-sm transition-all duration-300 hover:border-neon-cyan/60 hover:bg-neon-cyan/[0.08] hover:text-neon-cyan focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
+          >
+            WhatsApp directo
+          </a>
+        </div>
+
+        <!-- Tipos de evento -->
+        <ul
+          class="mt-10 flex flex-wrap gap-2"
+          data-reveal
+          style="--reveal-delay:340ms"
+          aria-label="Tipos de evento"
+        >
+          {
+            EVENTOS.slice(0, 5).map((evento) => (
+              <li class="rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-white/55">
+                {evento.titulo}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <!-- ── Columna del flyer ──────────────────────────────── -->
+      <div class="relative mx-auto w-full max-w-md lg:max-w-none" data-reveal style="--reveal-delay:200ms">
+        <div class="relative animate-float-slow">
+          <!-- Resplandor detrás del flyer -->
+          <div
+            class="absolute -inset-6 rounded-[2.5rem] bg-gradient-to-br from-neon-cyan/30 via-neon-magenta/25 to-neon-yellow/20 opacity-70 blur-3xl"
+            aria-hidden="true"
+          >
+          </div>
+
+          <figure
+            class="relative overflow-hidden rounded-[1.75rem] border border-white/12 bg-ink-900 shadow-[0_40px_100px_-30px_rgba(255,46,196,0.35)]"
+          >
+            <img
+              src="/flyer-lookuman.jpg"
+              alt="Flyer oficial de Deejay Lookuman EnergyMan con los servicios de deejay, animación y amplificación, el equipamiento incluido y los datos de contacto."
+              width="930"
+              height="1163"
+              loading="eager"
+              fetchpriority="high"
+              decoding="async"
+              class="h-auto w-full"
+            />
+          </figure>
+
+          <!-- Sello flotante -->
+          <div
+            class="absolute -left-4 -top-6 rotate-[-6deg] sm:-left-10 lg:-left-12 sm:-left-6 rounded-2xl border border-neon-yellow/40 bg-ink-950/90 px-4 py-3 shadow-[0_0_40px_-10px_var(--color-neon-yellow)] backdrop-blur-md"
+          >
+            <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-neon-yellow">Incluye</p>
+            <p class="mt-0.5 text-sm font-bold leading-tight text-white">
+              2 JBL EON 15 · Sub<br />2 Luces · Micrófono
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Eslogan ───────────────────────────────────────────── -->
+    <p
+      class="mt-20 border-t border-white/8 pt-8 text-center font-display text-[clamp(1rem,2.6vw,1.6rem)] uppercase italic leading-tight tracking-wide text-white/75"
+      data-reveal
+    >
+      «{MARCA.slogan}»
+    </p>
+  </div>
+</section>

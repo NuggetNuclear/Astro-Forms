@@ -1,0 +1,57 @@
+---
+import { PROCESO } from "../data/sitio";
+---
+
+<section id="proceso" class="relative scroll-mt-24 py-24 sm:py-32">
+  <div class="mx-auto max-w-7xl px-5 sm:px-8">
+    <header class="mx-auto max-w-3xl text-center" data-reveal>
+      <span
+        class="inline-flex items-center gap-2 rounded-full border border-neon-cyan/30 bg-neon-cyan/[0.07] px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-neon-cyan"
+      >
+        <span class="h-1.5 w-1.5 animate-pulse-glow rounded-full bg-neon-cyan"></span>
+        Cómo trabajo
+      </span>
+
+      <h2 class="mt-6 font-display text-4xl uppercase leading-[0.95] sm:text-6xl">
+        De la reserva <span class="text-gradient-neon">a la pista</span>
+      </h2>
+
+      <p class="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/55 sm:text-lg">
+        Cuatro pasos claros para que llegues al día del evento sabiendo exactamente qué va a sonar y
+        cuándo.
+      </p>
+    </header>
+
+    <ol class="relative mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <!-- Línea que conecta los pasos en escritorio -->
+      <div
+        class="pointer-events-none absolute left-0 right-0 top-11 hidden h-px bg-gradient-to-r from-transparent via-white/15 to-transparent lg:block"
+        aria-hidden="true"
+      >
+      </div>
+
+      {
+        PROCESO.map((etapa, i) => (
+          <li
+            class="group relative rounded-3xl border border-white/8 bg-ink-900/50 p-7 transition-all duration-400 hover:-translate-y-1.5 hover:border-white/20"
+            data-reveal
+            style={`--reveal-delay:${i * 90}ms`}
+          >
+            <span
+              class="relative z-10 inline-grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-ink-950 font-display text-lg text-neon-cyan transition-all duration-400 group-hover:border-neon-cyan/60 group-hover:shadow-[0_0_28px_-6px_var(--color-neon-cyan)]"
+              aria-hidden="true"
+            >
+              {etapa.paso}
+            </span>
+
+            <h3 class="mt-5 font-display text-xl uppercase tracking-tight text-white">
+              {etapa.titulo}
+            </h3>
+
+            <p class="mt-3 text-sm leading-relaxed text-white/50">{etapa.descripcion}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

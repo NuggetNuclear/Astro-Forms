@@ -28,7 +28,11 @@ const TIPO_HTML = {
 const esMitad = campo.ancho === "mitad";
 ---
 
-<div class:list={[esMitad ? "sm:col-span-1" : "sm:col-span-2"]} data-campo={campo.nombre}>
+<div
+  class:list={[esMitad ? "sm:col-span-1" : "sm:col-span-2"]}
+  data-campo={campo.nombre}
+  data-solo-eventos={campo.soloEventos?.join("|")}
+>
   {
     campo.tipo === "textarea" ? (
       <Textarea

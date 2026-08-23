@@ -16,7 +16,7 @@ const acento = bloque.acento ?? acentoPaso;
 <section
   class="rounded-3xl border border-white/8 bg-ink-900/40 p-5 backdrop-blur-sm sm:p-7"
   data-bloque
-  data-solo-matrimonio={bloque.soloMatrimonio ? "true" : undefined}
+  data-solo-eventos={bloque.soloEventos?.join("|")}
 >
   {
     (bloque.titulo || bloque.autocompletar) && (

@@ -149,6 +149,60 @@ export const EQUIPAMIENTO: Equipo[] = [
 ];
 
 /* ------------------------------------------------------------------ */
+/* Qué define el precio                                                */
+/* ------------------------------------------------------------------ */
+
+/**
+ * No hay tarifa publicada: cada evento se cotiza. Lo que sí se puede decir
+ * de antemano es de qué depende el número, para que nadie tenga que llenar
+ * un formulario entero sólo para entender por qué hay que preguntar.
+ */
+export type FactorPrecio = {
+  titulo: string;
+  descripcion: string;
+  emoji: string;
+  acento: "cyan" | "magenta" | "yellow";
+};
+
+export const FACTORES_PRECIO: FactorPrecio[] = [
+  {
+    titulo: "Cuántas horas de música",
+    descripcion:
+      "Un cóctel de tres horas y una fiesta que termina a las cuatro de la mañana no valen lo mismo. Se cuenta desde la primera canción hasta la última.",
+    emoji: "🕒",
+    acento: "cyan",
+  },
+  {
+    titulo: "Dónde es",
+    descripcion:
+      "El equipo viaja conmigo. La comuna, la distancia y a qué hora puedo entrar a montar entran en el cálculo.",
+    emoji: "📍",
+    acento: "magenta",
+  },
+  {
+    titulo: "Qué servicios necesitan",
+    descripcion:
+      "DJ solo, DJ con animación, micrófono para los discursos, iluminación, Hora Loca o karaoke. Se suma lo que usen y nada más.",
+    emoji: "🎛️",
+    acento: "yellow",
+  },
+  {
+    titulo: "Cuánta gente y qué salón",
+    descripcion:
+      "El número de invitados y el tamaño del lugar definen cuánta potencia hay que montar para que se escuche parejo en toda la pista.",
+    emoji: "🔊",
+    acento: "cyan",
+  },
+  {
+    titulo: "Qué fecha",
+    descripcion:
+      "Un sábado de diciembre no es un jueves de mayo. Las fechas más pedidas se reservan con bastante anticipación.",
+    emoji: "📅",
+    acento: "magenta",
+  },
+];
+
+/* ------------------------------------------------------------------ */
 /* Cómo trabajamos                                                     */
 /* ------------------------------------------------------------------ */
 

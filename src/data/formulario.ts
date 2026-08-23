@@ -6,8 +6,9 @@
  * al inicio los datos de contacto y del evento que necesita cualquier
  * cotización — no sólo un matrimonio.
  *
- * Los bloques marcados con `soloMatrimonio` se muestran únicamente cuando el
- * tipo de evento seleccionado es "Matrimonio".
+ * Bloques y campos pueden declarar `soloEventos`: la lista de tipos de evento
+ * en los que la pregunta aplica. Lo que queda fuera se oculta, y al estar
+ * oculto no se valida ni se envía.
  */
 
 export type Acento = "cyan" | "magenta" | "yellow";
@@ -19,6 +20,11 @@ type Base = {
   requerido?: boolean;
   /** Ancho dentro de la grilla de 2 columnas del bloque */
   ancho?: "completo" | "mitad";
+  /**
+   * Tipos de evento en los que la pregunta tiene sentido. Sin la lista, se
+   * pregunta siempre. Lo que queda oculto no se valida ni se envía.
+   */
+  soloEventos?: string[];
 };
 
 export type Campo =
@@ -39,7 +45,8 @@ export type Bloque = {
   titulo?: string;
   nota?: string;
   acento?: Acento;
-  soloMatrimonio?: boolean;
+  /** Igual que en los campos, pero para el bloque entero. */
+  soloEventos?: string[];
   /** Botón que rellena todos los campos del bloque con un texto dado */
   autocompletar?: { etiqueta: string; valor: string };
   campos: Campo[];
@@ -68,6 +75,27 @@ export const TIPOS_EVENTO = [
   "Evento de empresa",
   "Otro",
 ];
+
+/* Qué se pregunta según el evento. Se declaran aquí, en lista blanca, para
+   que añadir un tipo de evento obligue a decidir dónde entra. */
+
+/** Tienen un rito formal antes de la fiesta. */
+export const CON_CEREMONIA = [
+  "Matrimonio",
+  "Bautizo",
+  "Graduación / Licenciatura",
+  "Otro",
+];
+
+/** Hay discursos, entrada oficial y micrófono para los anfitriones. */
+export const CON_PROTOCOLO = TIPOS_EVENTO.filter(
+  (tipo) => tipo !== "Disco Peque (fiesta infantil)",
+);
+
+/** Hay cóctel y cena de por medio: en una fiesta infantil, no. */
+export const CON_SOBREMESA = TIPOS_EVENTO.filter(
+  (tipo) => tipo !== "Disco Peque (fiesta infantil)",
+);
 
 export const ESTILOS_MUSICALES = [
   "Salsa",
@@ -126,7 +154,7 @@ export const PASOS: Paso[] = [
     titulo: "Contacto y evento",
     corto: "Contacto",
     intro:
-      "Empecemos por lo esencial: quiénes son, cuándo es y dónde. Con esto confirmo disponibilidad de inmediato.",
+      "Empecemos por lo esencial: quiénes son, cuándo es y dónde. Si sólo quieren saber si tengo su fecha libre y cuánto vale, con este paso basta: envíenlo y les respondo. El cuestionario musical puede esperar.",
     acento: "cyan",
     bloques: [
       {
@@ -246,7 +274,7 @@ export const PASOS: Paso[] = [
         titulo: "Canciones del protocolo",
         nota: "Indiquen el nombre de la canción y, si lo conocen, el artista o intérprete.",
         acento: "magenta",
-        soloMatrimonio: true,
+        soloEventos: ["Matrimonio"],
         autocompletar: PISTA_SUGERENCIAS,
         campos: [
           { tipo: "cancion", nombre: "entrada_novia", etiqueta: "Entrada de la novia" , ancho: "mitad" },
@@ -302,9 +330,24 @@ export const PASOS: Paso[] = [
             etiqueta: "Ceremonia",
             filas: 2,
             ancho: "mitad",
+            soloEventos: CON_CEREMONIA,
           },
-          { tipo: "textarea", nombre: "musica_coctel", etiqueta: "Cóctel", filas: 2, ancho: "mitad" },
-          { tipo: "textarea", nombre: "musica_cena", etiqueta: "Cena", filas: 2, ancho: "mitad" },
+          {
+            tipo: "textarea",
+            nombre: "musica_coctel",
+            etiqueta: "Cóctel",
+            filas: 2,
+            ancho: "mitad",
+            soloEventos: CON_SOBREMESA,
+          },
+          {
+            tipo: "textarea",
+            nombre: "musica_cena",
+            etiqueta: "Cena",
+            filas: 2,
+            ancho: "mitad",
+            soloEventos: CON_SOBREMESA,
+          },
           {
             tipo: "textarea",
             nombre: "musica_inicio_fiesta",
@@ -681,6 +724,7 @@ export const PASOS: Paso[] = [
       {
         titulo: "Momentos y protocolo",
         acento: "magenta",
+        soloEventos: CON_PROTOCOLO,
         campos: [
           {
             tipo: "textarea",
@@ -750,6 +794,7 @@ export const PASOS: Paso[] = [
             etiqueta: "¿Ceremonia y recepción en el mismo lugar?",
             opciones: ["Sí", "No", "Aún no lo sabemos"],
             ancho: "mitad",
+            soloEventos: CON_CEREMONIA,
           },
           {
             tipo: "textarea",

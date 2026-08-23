@@ -26,10 +26,17 @@ function iniciar(form: HTMLFormElement) {
   const btnAnterior = form.querySelector<HTMLButtonElement>("[data-anterior]")!;
   const btnSiguiente = form.querySelector<HTMLButtonElement>("[data-siguiente]")!;
   const btnEnviar = form.querySelector<HTMLButtonElement>("[data-enviar]")!;
-  const avisoError = form.querySelector<HTMLElement>("[data-error-paso]")!;
+  /* Vive en la barra sticky, fuera del <form>: así el aviso sigue en
+     pantalla aunque el paso mida varias pantallas de alto. */
+  const avisoError = raiz.querySelector<HTMLElement>("[data-error-paso]")!;
   const panelExito = raiz.querySelector<HTMLElement>("[data-exito]")!;
   const enlaceExito = raiz.querySelector<HTMLAnchorElement>("[data-exito-whatsapp]")!;
   const btnDescargar = raiz.querySelector<HTMLButtonElement>("[data-descargar]")!;
+  const btnCotizar = form.querySelector<HTMLButtonElement>("[data-cotizar]")!;
+  const btnSeguir = raiz.querySelector<HTMLButtonElement>("[data-seguir]")!;
+  const bloqueSeguir = raiz.querySelector<HTMLElement>("[data-seguir-cuestionario]")!;
+  const varianteCompleto = raiz.querySelector<HTMLElement>('[data-variante="completo"]')!;
+  const varianteCotizacion = raiz.querySelector<HTMLElement>('[data-variante="cotizacion"]')!;
   const estadoGuardado = form.querySelector<HTMLElement>("[data-estado-guardado]")!;
   const contenedorProgreso = raiz.querySelector<HTMLElement>("[data-progreso]")!;
 
@@ -37,6 +44,12 @@ function iniciar(form: HTMLFormElement) {
   const whatsapp = form.dataset.whatsapp ?? "";
   const total = paneles.length;
   let actual = 0;
+  /* El `mostrar()` del arranque no es progreso de nadie: si guardara,
+     pisaría el aviso de "recuperamos su borrador" 600 ms después. */
+  let arrancando = true;
+  /* El borrador sólo se suelta cuando llegó el cuestionario entero: tras una
+     cotización las respuestas musicales siguen pendientes de escribirse. */
+  let ultimoEnvioCompleto = false;
 
   /* ---------------------------------------------------------------- */
   /* Navegación                                                        */
@@ -64,10 +77,12 @@ function iniciar(form: HTMLFormElement) {
     tituloPaso.textContent = PASOS[actual]?.titulo ?? "";
 
     btnAnterior.disabled = actual === 0;
+    btnCotizar.hidden = actual !== 0;
     btnSiguiente.hidden = actual === total - 1;
     btnEnviar.hidden = actual !== total - 1;
 
     ocultarError();
+    if (!arrancando) guardarBorrador();
 
     if (desplazar) {
       const y =
@@ -88,7 +103,7 @@ function iniciar(form: HTMLFormElement) {
   function controles(ambito: ParentNode): Control[] {
     return Array.from(
       ambito.querySelectorAll<Control>("input, select, textarea"),
-    ).filter((el) => !el.disabled && !el.closest("[data-bloque][hidden]"));
+    ).filter((el) => !el.disabled && !el.closest("[data-solo-eventos][hidden]"));
   }
 
   function primerInvalido(indice: number): Control | undefined {
@@ -119,6 +134,8 @@ function iniciar(form: HTMLFormElement) {
       "un campo";
 
     if (el.validity.valueMissing) return `Falta completar: ${etiqueta}`;
+    if (el.validity.rangeUnderflow && el.type === "date")
+      return "Esa fecha ya pasó. Indiquen la fecha del evento.";
     if (el.validity.typeMismatch && el.type === "email")
       return "Revisa el correo electrónico: parece que falta algo.";
     return `Revisa el campo: ${etiqueta}`;
@@ -156,21 +173,58 @@ function iniciar(form: HTMLFormElement) {
   });
 
   /* ---------------------------------------------------------------- */
+  /* Saneamiento de los controles nativos                              */
+  /* ---------------------------------------------------------------- */
+
+  /* La página es estática: si el `min` se calculara en el build quedaría
+     congelado en la fecha del despliegue. Se fija al cargar. */
+  const hoy = new Date();
+  const hoyISO = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${String(
+    hoy.getDate(),
+  ).padStart(2, "0")}`;
+  form.querySelectorAll<HTMLInputElement>('input[type="date"]').forEach((campo) => {
+    campo.min = hoyISO;
+  });
+
+  /* Un scroll sobre un <input type="number"> enfocado le cambia el valor sin
+     que nadie se entere. En un formulario largo eso es una respuesta rota. */
+  form.querySelectorAll<HTMLInputElement>('input[type="number"]').forEach((campo) => {
+    campo.addEventListener("wheel", (evento) => {
+      if (document.activeElement === campo) evento.preventDefault();
+    }, { passive: false });
+  });
+
+  /* ---------------------------------------------------------------- */
   /* Bloques condicionales según tipo de evento                        */
   /* ---------------------------------------------------------------- */
 
   const selectorTipo = form.querySelector<HTMLSelectElement>('[name="tipo_evento"]');
 
   function sincronizarCondicionales() {
-    const esMatrimonio = selectorTipo?.value === "Matrimonio";
+    const tipo = selectorTipo?.value ?? "";
 
-    form.querySelectorAll<HTMLElement>("[data-solo-matrimonio]").forEach((bloque) => {
-      bloque.hidden = !esMatrimonio;
+    /* Sin evento elegido todavía no hay nada que filtrar: se muestra todo en
+       lugar de esconder preguntas por una decisión que nadie ha tomado. */
+    form.querySelectorAll<HTMLElement>("[data-solo-eventos]").forEach((elemento) => {
+      const aplica = elemento.dataset.soloEventos!.split("|");
+      elemento.hidden = tipo !== "" && !aplica.includes(tipo);
     });
 
-    form.querySelectorAll<HTMLElement>("[data-aviso-matrimonio]").forEach((aviso) => {
-      if (esMatrimonio) delete aviso.dataset.visible;
-      else aviso.dataset.visible = "";
+    /* Un aviso por paso, sólo si ese paso escondió algo. */
+    paneles.forEach((panel) => {
+      const aviso = panel.querySelector<HTMLElement>("[data-aviso-condicional]");
+      if (!aviso) return;
+
+      const ocultos = panel.querySelectorAll("[data-solo-eventos][hidden]").length;
+      if (!ocultos || !tipo) {
+        delete aviso.dataset.visible;
+        return;
+      }
+
+      aviso.querySelector("[data-aviso-texto]")!.textContent =
+        `Ocultamos las preguntas que no aplican a «${tipo}». Si aun así quieren ` +
+        "definir algo de eso, cuéntenmelo en el campo de texto libre del paso.";
+      aviso.dataset.visible = "";
     });
   }
 
@@ -294,9 +348,11 @@ function iniciar(form: HTMLFormElement) {
   }
 
   /** Resumen breve: lo que cabe cómodamente en un mensaje de WhatsApp. */
-  function comoResumen(datos: Record<string, string>): string {
+  function comoResumen(datos: Record<string, string>, soloCotizacion: boolean): string {
     const partes = [
-      "¡Hola Lookuman! Acabo de enviar el cuestionario musical.",
+      soloCotizacion
+        ? "¡Hola Lookuman! Quiero cotizar mi evento."
+        : "¡Hola Lookuman! Acabo de enviar el cuestionario musical.",
       "",
       `*Nombre:* ${datos.nombre_contacto ?? "—"}`,
       `*Evento:* ${datos.tipo_evento ?? "—"}`,
@@ -309,7 +365,12 @@ function iniciar(form: HTMLFormElement) {
     if (datos.estilos) partes.push(`*Estilos:* ${datos.estilos}`);
     if (datos.no_generos) partes.push(`*No tocar:* ${datos.no_generos}`);
 
-    partes.push("", "Quedo atento/a a su confirmación de disponibilidad. ¡Gracias!");
+    partes.push(
+      "",
+      soloCotizacion
+        ? "¿Tienes disponible esa fecha? Quedo atento/a al valor. ¡Gracias!"
+        : "Quedo atento/a a su confirmación de disponibilidad. ¡Gracias!",
+    );
     return partes.join("\n");
   }
 
@@ -324,8 +385,14 @@ function iniciar(form: HTMLFormElement) {
     if (!borradorActivo) return;
     window.clearTimeout(temporizador);
     temporizador = window.setTimeout(() => {
+      const datos = recolectar();
+      if (!Object.keys(datos).length) return limpiarBorrador();
+
       try {
-        localStorage.setItem(CLAVE_BORRADOR, JSON.stringify(recolectar()));
+        localStorage.setItem(
+          CLAVE_BORRADOR,
+          JSON.stringify({ version: 2, paso: actual, datos }),
+        );
         estadoGuardado.textContent = "Borrador guardado en este navegador ✓";
       } catch {
         /* Modo incógnito o almacenamiento lleno: seguir sin borrador. */
@@ -333,14 +400,26 @@ function iniciar(form: HTMLFormElement) {
     }, 600);
   }
 
-  function restaurarBorrador() {
+  /** Paso en el que se quedó la persona, o 0 si no había borrador. */
+  function restaurarBorrador(): number {
     let datos: Record<string, string>;
+    let paso = 0;
     try {
       const crudo = localStorage.getItem(CLAVE_BORRADOR);
-      if (!crudo) return;
-      datos = JSON.parse(crudo) as Record<string, string>;
+      if (!crudo) return 0;
+      const guardado: unknown = JSON.parse(crudo);
+      if (!guardado || typeof guardado !== "object") return 0;
+
+      /* Borradores anteriores guardaban el objeto de respuestas plano. */
+      if ("datos" in guardado) {
+        const envuelto = guardado as { paso?: number; datos: Record<string, string> };
+        datos = envuelto.datos ?? {};
+        paso = Math.max(0, Math.min(Number(envuelto.paso) || 0, total - 1));
+      } else {
+        datos = guardado as Record<string, string>;
+      }
     } catch {
-      return;
+      return 0;
     }
 
     for (const [nombre, valor] of Object.entries(datos)) {
@@ -358,7 +437,11 @@ function iniciar(form: HTMLFormElement) {
       }
     }
 
-    estadoGuardado.textContent = "Recuperamos el borrador que dejaste a medias ✓";
+    estadoGuardado.textContent =
+      paso > 0
+        ? `Recuperamos su borrador y volvimos al paso ${paso + 1} ✓`
+        : "Recuperamos el borrador que dejaron a medias ✓";
+    return paso;
   }
 
   form.addEventListener("input", guardarBorrador);
@@ -368,12 +451,55 @@ function iniciar(form: HTMLFormElement) {
   /* Envío                                                             */
   /* ---------------------------------------------------------------- */
 
-  form.addEventListener("submit", async (evento) => {
-    evento.preventDefault();
-
+  /**
+   * Envía lo que haya. `soloCotizacion` distingue el atajo del paso 1 —quién
+   * es, qué evento y cuándo, que es todo lo que hace falta para confirmar
+   * disponibilidad y valor— del cuestionario musical completo.
+   */
+  async function enviar(boton: HTMLButtonElement, soloCotizacion: boolean) {
     /* Honeypot: si viene relleno, es un bot. Fingimos éxito y no enviamos. */
     const trampa = form.querySelector<HTMLInputElement>('[name="sitio_web"]');
     if (trampa?.value) return;
+
+    const datos = recolectar();
+    const etiquetaOriginal = boton.textContent;
+    boton.disabled = true;
+    boton.textContent = "Enviando…";
+
+    if (endpoint) {
+      try {
+        const respuesta = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            ...datos,
+            _tipo: soloCotizacion ? "Solicitud de cotización" : "Cuestionario musical completo",
+            _resumen: comoTexto(datos),
+          }),
+        });
+        if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
+      } catch {
+        boton.disabled = false;
+        boton.textContent = etiquetaOriginal;
+        mostrarError(
+          "No pudimos enviar el formulario. Revisa tu conexión o envíanoslo directamente por WhatsApp.",
+        );
+        return;
+      }
+    }
+
+    boton.disabled = false;
+    boton.textContent = etiquetaOriginal;
+    exito(datos, soloCotizacion);
+  }
+
+  /* Atajo del paso 1: sólo hay que validar ese paso. */
+  btnCotizar.addEventListener("click", () => {
+    if (validarPanel(0)) void enviar(btnCotizar, true);
+  });
+
+  form.addEventListener("submit", (evento) => {
+    evento.preventDefault();
 
     for (let i = 0; i < total; i++) {
       if (primerInvalido(i)) {
@@ -383,54 +509,97 @@ function iniciar(form: HTMLFormElement) {
       }
     }
 
-    const datos = recolectar();
-    const etiquetaOriginal = btnEnviar.textContent;
-    btnEnviar.disabled = true;
-    btnEnviar.textContent = "Enviando…";
-
-    if (endpoint) {
-      try {
-        const respuesta = await fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
-          body: JSON.stringify({ ...datos, _resumen: comoTexto(datos) }),
-        });
-        if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
-      } catch {
-        btnEnviar.disabled = false;
-        btnEnviar.textContent = etiquetaOriginal;
-        mostrarError(
-          "No pudimos enviar el formulario. Revisa tu conexión o envíanoslo directamente por WhatsApp.",
-        );
-        return;
-      }
-    }
-
-    exito(datos);
+    void enviar(btnEnviar, false);
   });
 
-  function exito(datos: Record<string, string>) {
-    enlaceExito.href = `https://wa.me/${whatsapp}?text=${encodeURIComponent(comoResumen(datos))}`;
+  /* Volver al cuestionario después de pedir la cotización. */
+  btnSeguir.addEventListener("click", () => {
+    panelExito.hidden = true;
+    form.hidden = false;
+    contenedorProgreso.hidden = false;
+    borradorActivo = true;
+    mostrar(1);
+  });
+
+  function exito(datos: Record<string, string>, soloCotizacion: boolean) {
+    ultimoEnvioCompleto = !soloCotizacion;
+
+    enlaceExito.href = `https://wa.me/${whatsapp}?text=${encodeURIComponent(
+      comoResumen(datos, soloCotizacion),
+    )}`;
+
+    varianteCompleto.hidden = soloCotizacion;
+    varianteCotizacion.hidden = !soloCotizacion;
+    bloqueSeguir.hidden = !soloCotizacion;
+    reiniciarAvisoEntrega();
 
     form.hidden = true;
     contenedorProgreso.hidden = true;
     panelExito.hidden = false;
     panelExito.scrollIntoView({ behavior: "smooth", block: "center" });
 
-    /* Cancelar el guardado pendiente antes de limpiar, o volvería a
-       escribir el borrador justo después de borrarlo. */
+    /* Cancelar el guardado pendiente: a partir de aquí el formulario ya no
+       cambia, y un guardado tardío pisaría lo que se decida abajo. */
     borradorActivo = false;
     window.clearTimeout(temporizador);
+
+    /* Sin endpoint configurado, WhatsApp es el canal real de entrega, y el
+       botón de la pantalla de éxito es quien lo dispara: abrirlo desde aquí
+       lo bloquearía el navegador por no venir de un gesto directo.
+       Por eso el borrador NO se borra al enviar: mientras no toquen ese
+       botón, las respuestas no han llegado a ninguna parte y perderlas
+       dejaría a la persona con el cuestionario completo y nada que mostrar. */
+    btnDescargar.onclick = () => {
+      descargar(comoTexto(datos));
+      confirmarEntrega();
+    };
+
+    if (endpoint && ultimoEnvioCompleto) limpiarBorrador();
+  }
+
+  /* Un único oyente: `exito()` puede correr más de una vez por visita. */
+  enlaceExito.addEventListener("click", confirmarEntrega);
+
+  const avisoPendiente = panelExito.querySelector<HTMLElement>("[data-aviso-entrega]");
+  const avisoEntregaOriginal = avisoPendiente
+    ? { clase: avisoPendiente.className, contenido: avisoPendiente.innerHTML }
+    : null;
+
+  function limpiarBorrador() {
     try {
       localStorage.removeItem(CLAVE_BORRADOR);
     } catch {
       /* sin borrador que limpiar */
     }
+  }
 
-    /* Sin endpoint configurado, WhatsApp es el canal real de entrega, y el
-       botón de la pantalla de éxito es quien lo dispara: abrirlo desde aquí
-       lo bloquearía el navegador por no venir de un gesto directo. */
-    btnDescargar.onclick = () => descargar(comoTexto(datos));
+  /** Las respuestas salieron del navegador: ya se puede soltar el borrador. */
+  function confirmarEntrega() {
+    /* Tras una cotización el cuestionario musical sigue a medias: borrar el
+       borrador ahí sería tirar lo que todavía queda por completar. */
+    if (ultimoEnvioCompleto) limpiarBorrador();
+
+    const aviso = panelExito.querySelector<HTMLElement>("[data-aviso-entrega]");
+    if (!aviso) return;
+    aviso.className =
+      "mx-auto mt-5 flex max-w-md items-start gap-2.5 rounded-2xl border " +
+      "border-emerald-400/30 bg-emerald-400/[0.07] p-4 text-left text-sm " +
+      "leading-relaxed text-emerald-200";
+    aviso.innerHTML =
+      '<span aria-hidden="true">✓</span><span>Listo. Si el chat no se abrió, ' +
+      "vuelvan a tocar el botón: sus respuestas siguen preparadas.</span>";
+  }
+
+  /**
+   * Devuelve el aviso a "todavía no me llegan". Tras una cotización se puede
+   * volver al cuestionario y llegar de nuevo a esta pantalla: dejarlo en
+   * verde diría que el cuestionario completo ya se entregó, y no es así.
+   */
+  function reiniciarAvisoEntrega() {
+    const aviso = panelExito.querySelector<HTMLElement>("[data-aviso-entrega]");
+    if (!aviso || !avisoEntregaOriginal) return;
+    aviso.className = avisoEntregaOriginal.clase;
+    aviso.innerHTML = avisoEntregaOriginal.contenido;
   }
 
   function descargar(texto: string) {
@@ -439,13 +608,18 @@ function iniciar(form: HTMLFormElement) {
     const enlace = document.createElement("a");
     enlace.href = url;
     enlace.download = "cuestionario-musical-lookuman.txt";
+    /* Firefox ignora el click de un enlace que no está en el documento, y
+       revocar la URL en el mismo tick puede cancelar la descarga. */
+    document.body.append(enlace);
     enlace.click();
-    URL.revokeObjectURL(url);
+    enlace.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
   }
 
   /* ---------------------------------------------------------------- */
 
-  restaurarBorrador();
+  const pasoGuardado = restaurarBorrador();
   sincronizarCondicionales();
-  mostrar(0, false);
+  mostrar(pasoGuardado, false);
+  arrancando = false;
 }

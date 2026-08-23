@@ -22,6 +22,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? "https://lookuman.cl
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
+
+    <!-- Antes de pintar: marca que hay JS, único caso en que se puede
+         esconder contenido a la espera del reveal. -->
+    <script is:inline>document.documentElement.classList.add("js");</script>
     <link rel="canonical" href={canonical} />
 
     <title>{titulo}</title>
@@ -86,7 +90,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? "https://lookuman.cl
               observador.unobserve(entrada.target);
             }
           },
-          { rootMargin: "0px 0px -12% 0px", threshold: 0.05 },
+          { rootMargin: "0px 0px -12% 0px", threshold: 0 },
         );
 
         objetivos.forEach((objetivo) => observador.observe(objetivo));

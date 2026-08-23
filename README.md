@@ -44,6 +44,7 @@ src/
 ├── components/
 │   ├── Nav.astro          Hero.astro       Ticker.astro
 │   ├── Servicios.astro    Equipamiento.astro
+│   ├── Precio.astro       ← qué define el valor (sin tarifa publicada)
 │   ├── Proceso.astro      Reserva.astro    ← sección del formulario
 │   ├── Footer.astro       CtaFlotante.astro
 │   └── form/
@@ -60,9 +61,9 @@ src/
 
 ### Editar contenido
 
-- **Teléfono, redes, eventos, equipamiento:** `src/data/sitio.ts`.
-  El número de WhatsApp vive en una sola constante y se propaga a todos los
-  botones del sitio.
+- **Teléfono, redes, eventos, equipamiento, factores de precio:**
+  `src/data/sitio.ts`. El número de WhatsApp vive en una sola constante y se
+  propaga a todos los botones del sitio.
 - **Preguntas del cuestionario:** `src/data/formulario.ts`. Añadir un campo es
   añadir un objeto al array del bloque correspondiente; el renderizado, la
   validación, el borrador y el resumen se adaptan solos.
@@ -70,6 +71,25 @@ src/
 Tipos de campo disponibles: `texto`, `email`, `tel`, `fecha`, `hora`, `numero`,
 `textarea`, `select`, `radio`, `chips`, `checkbox` y `cancion` (par
 canción + artista).
+
+Cualquier bloque o campo puede declarar `soloEventos: [...]` con los tipos de
+evento en los que la pregunta aplica; sin la lista, se pregunta siempre. Lo que
+queda oculto no se valida ni se envía. Las listas de uso común
+(`CON_CEREMONIA`, `CON_PROTOCOLO`, `CON_SOBREMESA`) están al principio del
+archivo.
+
+---
+
+## Dos formas de reservar
+
+El formulario tiene un atajo: el paso 1 —contacto y datos del evento— se puede
+enviar por sí solo con el botón **«Sólo pedir cotización»**, que es todo lo que
+hace falta para confirmar disponibilidad y valor. Quien quiera dejar además la
+música planificada sigue con los 6 pasos del cuestionario, desde ahí mismo o
+más tarde: el borrador espera.
+
+El envío lleva una clave `_tipo` que distingue `Solicitud de cotización` de
+`Cuestionario musical completo`.
 
 ---
 
@@ -79,7 +99,9 @@ El formulario tiene dos modos, según haya o no un endpoint configurado:
 
 **Sin configurar (por defecto).** Al enviar, la pantalla final ofrece un botón
 que abre WhatsApp con un resumen precargado, más un botón para descargar todas
-las respuestas en `.txt`. No requiere servidor.
+las respuestas en `.txt`. No requiere servidor. Mientras no se toque uno de esos
+dos botones las respuestas no han salido del navegador, así que la pantalla lo
+dice («Falta un paso») y el borrador se conserva hasta que la entrega ocurre.
 
 **Con endpoint.** Definir `PUBLIC_FORM_ENDPOINT` en un `.env` (ver
 `.env.example`). El formulario hace `POST` de un JSON con todos los campos más
@@ -92,12 +114,14 @@ alternativa.
 
 ## Detalles de implementación
 
-- **Borrador automático.** El cuestionario es largo, así que las respuestas se
-  guardan en `localStorage` mientras se completa y se restauran al volver. Se
-  limpia al enviar.
-- **Bloques condicionales.** Las canciones de protocolo de matrimonio sólo
-  aparecen si el tipo de evento es «Matrimonio»; los campos ocultos no se
-  validan ni se envían.
+- **Borrador automático.** El cuestionario es largo, así que las respuestas y el
+  paso en curso se guardan en `localStorage` mientras se completa, y al volver
+  se retoma donde se quedó. Se limpia sólo cuando el cuestionario completo
+  llegó a destino, no antes.
+- **Preguntas condicionales.** Cada bloque y cada campo puede limitarse a
+  ciertos tipos de evento: las canciones de protocolo son sólo de matrimonio,
+  el cóctel y la cena no aplican a una disco peque, los discursos tampoco. Un
+  aviso por paso explica qué se ocultó y por qué.
 - **Validación por pasos.** Nativa (`checkValidity`) y progresiva: los estados
   de error usan `:user-invalid`, así ningún campo se pinta de rojo antes de que
   la persona lo toque.
@@ -107,6 +131,9 @@ alternativa.
   activo y respeto por `prefers-reduced-motion`.
 - **Rendimiento.** Página estática, tipografías autoalojadas con métricas de
   respaldo (sin salto de texto) y ninguna petición a terceros.
+- **Degradación.** La animación de entrada esconde los elementos hasta que el
+  `IntersectionObserver` los revela, así que la regla se aplica sólo si hay
+  JavaScript (clase `js` en `<html>`). Sin él la página se ve entera.
 
 ---
 

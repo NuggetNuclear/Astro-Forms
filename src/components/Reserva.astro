@@ -48,6 +48,18 @@ const total = PASOS.length;
         respetuosa con su estilo.
       </p>
 
+      <p class="mx-auto mt-5 flex max-w-2xl flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-white/45">
+        <span class="inline-flex items-center gap-2">
+          <span aria-hidden="true">🕒</span> 7 pasos · 10 a 15 minutos
+        </span>
+        <span class="inline-flex items-center gap-2">
+          <span aria-hidden="true">💾</span> Se guarda solo: pueden salir y volver
+        </span>
+        <span class="inline-flex items-center gap-2">
+          <span aria-hidden="true">✳️</span> Sólo 7 campos obligatorios
+        </span>
+      </p>
+
       <p
         class="mx-auto mt-6 flex max-w-2xl items-start gap-3 rounded-2xl border border-neon-yellow/25 bg-neon-yellow/[0.06] p-4 text-left text-sm leading-relaxed text-neon-yellow-soft"
       >
@@ -61,9 +73,12 @@ const total = PASOS.length;
     </header>
 
     <!-- ── Tarjeta del formulario ─────────────────────────────── -->
+    <!-- Sin `data-reveal`: quien llega por el enlace directo /#reserva
+         aterriza justo encima de la tarjeta, que queda fuera del área que
+         observa el IntersectionObserver, y veía un hueco negro donde debía
+         estar el formulario. La superficie de conversión no se esconde. -->
     <div
       class="relative mt-14 rounded-[2rem] border border-white/10 bg-ink-900/60 p-1 shadow-[0_40px_120px_-40px_rgba(0,0,0,0.9)] backdrop-blur-xl"
-      data-reveal
     >
       <!-- Filo neón superior -->
       <div
@@ -103,13 +118,16 @@ const total = PASOS.length;
           </div>
 
           <!-- Navegación por pasos (escritorio) -->
-          <nav class="mt-4 hidden flex-wrap gap-1.5 lg:flex" aria-label="Pasos del formulario">
+          <nav
+            class="-mx-1 mt-4 flex snap-x gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none] lg:flex-wrap lg:overflow-visible [&::-webkit-scrollbar]:hidden"
+            aria-label="Pasos del formulario"
+          >
             {
               PASOS.map((paso, i) => (
                 <button
                   type="button"
                   data-ir-a-paso={i}
-                  class="group flex items-center gap-2 rounded-full border border-white/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-white/40 transition-all duration-200 hover:border-white/30 hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan aria-[current=step]:border-neon-cyan/60 aria-[current=step]:bg-neon-cyan/10 aria-[current=step]:text-neon-cyan data-[completo]:border-emerald-400/40 data-[completo]:text-emerald-300/80"
+                  class="group flex shrink-0 snap-start items-center gap-2 rounded-full border border-white/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-white/40 transition-all duration-200 hover:border-white/30 hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan aria-[current=step]:border-neon-cyan/60 aria-[current=step]:bg-neon-cyan/10 aria-[current=step]:text-neon-cyan data-[completo]:border-emerald-400/40 data-[completo]:text-emerald-300/80"
                 >
                   <span class="tabular-nums opacity-60">{String(i + 1).padStart(2, "0")}</span>
                   {paso.corto}
@@ -117,6 +135,13 @@ const total = PASOS.length;
               ))
             }
           </nav>
+
+          <p
+            class="mt-3 hidden items-start gap-2.5 rounded-xl border border-rose-500/40 bg-rose-500/10 px-3.5 py-2.5 text-sm leading-snug text-rose-200 data-[visible]:flex"
+            data-error-paso
+            role="alert"
+          >
+          </p>
         </div>
 
         <!-- ── Formulario ─────────────────────────────────────── -->
@@ -180,12 +205,23 @@ const total = PASOS.length;
             ))
           }
 
+          <p class="mt-6 text-xs leading-relaxed text-white/30">
+            Usamos estos datos sólo para cotizar y preparar la música de su evento. No los
+            compartimos con terceros. Pueden pedirme que los borre cuando quieran escribiéndome
+            a {CONTACTO.whatsappVisible}.
+          </p>
+
           <!-- ── Barra de acciones ────────────────────────────── -->
           <div
             class="mt-9 flex flex-col gap-4 border-t border-white/8 pt-7 sm:flex-row sm:items-center sm:justify-between"
           >
-            <p class="order-2 text-xs text-white/35 sm:order-1" data-estado-guardado>
-              Tus respuestas se guardan en este navegador mientras completas el formulario.
+            <p
+              class="order-2 max-w-sm text-xs leading-relaxed text-white/35 sm:order-1"
+              data-estado-guardado
+              role="status"
+              aria-live="polite"
+            >
+              Sus respuestas se guardan en este navegador mientras completan el formulario.
             </p>
 
             <div class="order-1 flex gap-3 sm:order-2">
@@ -217,18 +253,17 @@ const total = PASOS.length;
             </div>
           </div>
 
-          <p
-            class="mt-4 hidden items-center gap-2 rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200 data-[visible]:flex"
-            data-error-paso
-            role="alert"
-          >
-          </p>
         </form>
 
         <!-- ── Pantalla de éxito ──────────────────────────────── -->
         <div hidden data-exito class="py-10 text-center">
           <div
-            class="mx-auto grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-neon-cyan to-neon-magenta shadow-[0_0_60px_-10px_var(--color-neon-cyan)]"
+            class:list={[
+              "mx-auto grid h-20 w-20 place-items-center rounded-full",
+              endpoint
+                ? "bg-gradient-to-br from-neon-cyan to-neon-magenta shadow-[0_0_60px_-10px_var(--color-neon-cyan)]"
+                : "bg-gradient-to-br from-neon-yellow to-neon-magenta shadow-[0_0_60px_-10px_var(--color-neon-yellow)]",
+            ]}
           >
             <svg
               class="h-10 w-10 text-ink-950"
@@ -240,7 +275,7 @@ const total = PASOS.length;
               stroke-linejoin="round"
               aria-hidden="true"
             >
-              <path d="m4 12.5 5.5 5.5L20 7" />
+              {endpoint ? <path d="m4 12.5 5.5 5.5L20 7" /> : <path d="M12 6v7m0 4.5v.01" />}
             </svg>
           </div>
 
@@ -252,7 +287,7 @@ const total = PASOS.length;
                 </Fragment>
               ) : (
                 <Fragment>
-                  Cuestionario <span class="text-gradient-neon">completo</span>
+                  Falta <span class="text-gradient-neon">un paso</span>
                 </Fragment>
               )
             }
@@ -262,9 +297,22 @@ const total = PASOS.length;
             {
               endpoint
                 ? "Gracias por confiarme la música de uno de los días más importantes de sus vidas. Reviso todo y les respondo dentro de las próximas 24 horas."
-                : "Sólo queda un paso: envíenme las respuestas por WhatsApp y les confirmo disponibilidad de inmediato. También pueden descargar una copia para ustedes."
+                : "Sus respuestas todavía no me llegan: se quedaron en este navegador. Toquen el botón para enviármelas por WhatsApp y les confirmo disponibilidad de inmediato."
             }
           </p>
+
+          {!endpoint && (
+            <p
+              class="mx-auto mt-5 flex max-w-md items-start gap-2.5 rounded-2xl border border-neon-yellow/30 bg-neon-yellow/[0.07] p-4 text-left text-sm leading-relaxed text-neon-yellow-soft"
+              data-aviso-entrega
+            >
+              <span aria-hidden="true">⚠️</span>
+              <span>
+                Guardamos el borrador hasta que lo envíen. Si cierran esta página antes, sus
+                respuestas siguen aquí al volver — pero yo aún no las tengo.
+              </span>
+            </p>
+          )}
 
           <div class="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <a

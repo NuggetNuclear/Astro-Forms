@@ -26,7 +26,9 @@ function iniciar(form: HTMLFormElement) {
   const btnAnterior = form.querySelector<HTMLButtonElement>("[data-anterior]")!;
   const btnSiguiente = form.querySelector<HTMLButtonElement>("[data-siguiente]")!;
   const btnEnviar = form.querySelector<HTMLButtonElement>("[data-enviar]")!;
-  const avisoError = form.querySelector<HTMLElement>("[data-error-paso]")!;
+  /* Vive en la barra sticky, fuera del <form>: así el aviso sigue en
+     pantalla aunque el paso mida varias pantallas de alto. */
+  const avisoError = raiz.querySelector<HTMLElement>("[data-error-paso]")!;
   const panelExito = raiz.querySelector<HTMLElement>("[data-exito]")!;
   const enlaceExito = raiz.querySelector<HTMLAnchorElement>("[data-exito-whatsapp]")!;
   const btnDescargar = raiz.querySelector<HTMLButtonElement>("[data-descargar]")!;
@@ -37,6 +39,9 @@ function iniciar(form: HTMLFormElement) {
   const whatsapp = form.dataset.whatsapp ?? "";
   const total = paneles.length;
   let actual = 0;
+  /* El `mostrar()` del arranque no es progreso de nadie: si guardara,
+     pisaría el aviso de "recuperamos su borrador" 600 ms después. */
+  let arrancando = true;
 
   /* ---------------------------------------------------------------- */
   /* Navegación                                                        */
@@ -68,6 +73,7 @@ function iniciar(form: HTMLFormElement) {
     btnEnviar.hidden = actual !== total - 1;
 
     ocultarError();
+    if (!arrancando) guardarBorrador();
 
     if (desplazar) {
       const y =
@@ -119,6 +125,8 @@ function iniciar(form: HTMLFormElement) {
       "un campo";
 
     if (el.validity.valueMissing) return `Falta completar: ${etiqueta}`;
+    if (el.validity.rangeUnderflow && el.type === "date")
+      return "Esa fecha ya pasó. Indiquen la fecha del evento.";
     if (el.validity.typeMismatch && el.type === "email")
       return "Revisa el correo electrónico: parece que falta algo.";
     return `Revisa el campo: ${etiqueta}`;
@@ -153,6 +161,28 @@ function iniciar(form: HTMLFormElement) {
       }
       mostrar(destino);
     });
+  });
+
+  /* ---------------------------------------------------------------- */
+  /* Saneamiento de los controles nativos                              */
+  /* ---------------------------------------------------------------- */
+
+  /* La página es estática: si el `min` se calculara en el build quedaría
+     congelado en la fecha del despliegue. Se fija al cargar. */
+  const hoy = new Date();
+  const hoyISO = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${String(
+    hoy.getDate(),
+  ).padStart(2, "0")}`;
+  form.querySelectorAll<HTMLInputElement>('input[type="date"]').forEach((campo) => {
+    campo.min = hoyISO;
+  });
+
+  /* Un scroll sobre un <input type="number"> enfocado le cambia el valor sin
+     que nadie se entere. En un formulario largo eso es una respuesta rota. */
+  form.querySelectorAll<HTMLInputElement>('input[type="number"]').forEach((campo) => {
+    campo.addEventListener("wheel", (evento) => {
+      if (document.activeElement === campo) evento.preventDefault();
+    }, { passive: false });
   });
 
   /* ---------------------------------------------------------------- */
@@ -324,8 +354,14 @@ function iniciar(form: HTMLFormElement) {
     if (!borradorActivo) return;
     window.clearTimeout(temporizador);
     temporizador = window.setTimeout(() => {
+      const datos = recolectar();
+      if (!Object.keys(datos).length) return limpiarBorrador();
+
       try {
-        localStorage.setItem(CLAVE_BORRADOR, JSON.stringify(recolectar()));
+        localStorage.setItem(
+          CLAVE_BORRADOR,
+          JSON.stringify({ version: 2, paso: actual, datos }),
+        );
         estadoGuardado.textContent = "Borrador guardado en este navegador ✓";
       } catch {
         /* Modo incógnito o almacenamiento lleno: seguir sin borrador. */
@@ -333,14 +369,26 @@ function iniciar(form: HTMLFormElement) {
     }, 600);
   }
 
-  function restaurarBorrador() {
+  /** Paso en el que se quedó la persona, o 0 si no había borrador. */
+  function restaurarBorrador(): number {
     let datos: Record<string, string>;
+    let paso = 0;
     try {
       const crudo = localStorage.getItem(CLAVE_BORRADOR);
-      if (!crudo) return;
-      datos = JSON.parse(crudo) as Record<string, string>;
+      if (!crudo) return 0;
+      const guardado: unknown = JSON.parse(crudo);
+      if (!guardado || typeof guardado !== "object") return 0;
+
+      /* Borradores anteriores guardaban el objeto de respuestas plano. */
+      if ("datos" in guardado) {
+        const envuelto = guardado as { paso?: number; datos: Record<string, string> };
+        datos = envuelto.datos ?? {};
+        paso = Math.max(0, Math.min(Number(envuelto.paso) || 0, total - 1));
+      } else {
+        datos = guardado as Record<string, string>;
+      }
     } catch {
-      return;
+      return 0;
     }
 
     for (const [nombre, valor] of Object.entries(datos)) {
@@ -358,7 +406,11 @@ function iniciar(form: HTMLFormElement) {
       }
     }
 
-    estadoGuardado.textContent = "Recuperamos el borrador que dejaste a medias ✓";
+    estadoGuardado.textContent =
+      paso > 0
+        ? `Recuperamos su borrador y volvimos al paso ${paso + 1} ✓`
+        : "Recuperamos el borrador que dejaron a medias ✓";
+    return paso;
   }
 
   form.addEventListener("input", guardarBorrador);
@@ -417,20 +469,47 @@ function iniciar(form: HTMLFormElement) {
     panelExito.hidden = false;
     panelExito.scrollIntoView({ behavior: "smooth", block: "center" });
 
-    /* Cancelar el guardado pendiente antes de limpiar, o volvería a
-       escribir el borrador justo después de borrarlo. */
+    /* Cancelar el guardado pendiente: a partir de aquí el formulario ya no
+       cambia, y un guardado tardío pisaría lo que se decida abajo. */
     borradorActivo = false;
     window.clearTimeout(temporizador);
+
+    /* Sin endpoint configurado, WhatsApp es el canal real de entrega, y el
+       botón de la pantalla de éxito es quien lo dispara: abrirlo desde aquí
+       lo bloquearía el navegador por no venir de un gesto directo.
+       Por eso el borrador NO se borra al enviar: mientras no toquen ese
+       botón, las respuestas no han llegado a ninguna parte y perderlas
+       dejaría a la persona con el cuestionario completo y nada que mostrar. */
+    btnDescargar.onclick = () => {
+      descargar(comoTexto(datos));
+      confirmarEntrega();
+    };
+    enlaceExito.addEventListener("click", confirmarEntrega);
+
+    if (endpoint) limpiarBorrador();
+  }
+
+  function limpiarBorrador() {
     try {
       localStorage.removeItem(CLAVE_BORRADOR);
     } catch {
       /* sin borrador que limpiar */
     }
+  }
 
-    /* Sin endpoint configurado, WhatsApp es el canal real de entrega, y el
-       botón de la pantalla de éxito es quien lo dispara: abrirlo desde aquí
-       lo bloquearía el navegador por no venir de un gesto directo. */
-    btnDescargar.onclick = () => descargar(comoTexto(datos));
+  /** Las respuestas salieron del navegador: ya se puede soltar el borrador. */
+  function confirmarEntrega() {
+    limpiarBorrador();
+
+    const aviso = panelExito.querySelector<HTMLElement>("[data-aviso-entrega]");
+    if (!aviso) return;
+    aviso.className =
+      "mx-auto mt-5 flex max-w-md items-start gap-2.5 rounded-2xl border " +
+      "border-emerald-400/30 bg-emerald-400/[0.07] p-4 text-left text-sm " +
+      "leading-relaxed text-emerald-200";
+    aviso.innerHTML =
+      '<span aria-hidden="true">✓</span><span>Listo. Si el chat no se abrió, ' +
+      "vuelvan a tocar el botón: sus respuestas siguen preparadas.</span>";
   }
 
   function descargar(texto: string) {
@@ -439,13 +518,18 @@ function iniciar(form: HTMLFormElement) {
     const enlace = document.createElement("a");
     enlace.href = url;
     enlace.download = "cuestionario-musical-lookuman.txt";
+    /* Firefox ignora el click de un enlace que no está en el documento, y
+       revocar la URL en el mismo tick puede cancelar la descarga. */
+    document.body.append(enlace);
     enlace.click();
-    URL.revokeObjectURL(url);
+    enlace.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
   }
 
   /* ---------------------------------------------------------------- */
 
-  restaurarBorrador();
+  const pasoGuardado = restaurarBorrador();
   sincronizarCondicionales();
-  mostrar(0, false);
+  mostrar(pasoGuardado, false);
+  arrancando = false;
 }
